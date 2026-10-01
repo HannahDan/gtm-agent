@@ -1,0 +1,23 @@
+# Grounding for every generated email. Edit before running `gtm-agent draft`.
+product_name: "YourProduct"
+one_liner: "An AI assistant that helps oncology clinicians synthesize patient history and guidelines in minutes."
+pitch: >
+  We're building a tool that pulls together a patient's oncologic history, recent labs and imaging,
+  and relevant NCCN guideline pathways into a single view, so fellows spend less time charting and
+  more time with patients. We're in early pilot and want to learn directly from fellows how they
+  prepare for clinic and tumor boards today.
+
+study:
+  format: "remote 1:1 video interview and product walkthrough"
+  duration_minutes: 30
+  incentive: "a $100 gift card"
+  scheduling_link: "https://cal.com/yourcompany/fellow-study"
+
+sender:
+  name: "Jane Doe"
+  title: "Co-founder"
+  company: "YourCompany"
+  email: "jane@yourcompany.com"
+  physical_address: "123 Market St, San Francisco, CA 94105"
+
+opt_out_line: "If you'd prefer not to hear from us, just reply \"unsubscribe\" and we won't email you again."
