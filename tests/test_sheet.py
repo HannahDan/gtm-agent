@@ -2,7 +2,7 @@ import threading
 import urllib.request
 
 from gtm_agent.models import Contact, DraftStatus, EmailDraft, Institution, Role, Suppression
-from gtm_agent.sheet import make_server, render_page, sheet_payload
+from gtm_agent.sheet import make_server, render_page, serve, sheet_payload
 
 
 def _seed(session):
@@ -92,3 +92,20 @@ def test_server_serves_the_sheet(session):
     finally:
         server.shutdown()
         server.server_close()
+
+
+def test_serve_initializes_database_before_accepting(monkeypatch):
+    order = []
+    monkeypatch.setattr("gtm_agent.sheet.get_engine", lambda: order.append("init"))
+
+    class _Server:
+        def serve_forever(self):
+            order.append("accept")
+            raise KeyboardInterrupt
+
+        def server_close(self):
+            order.append("close")
+
+    monkeypatch.setattr("gtm_agent.sheet.make_server", lambda host, port: _Server())
+    serve()
+    assert order == ["init", "accept", "close"]

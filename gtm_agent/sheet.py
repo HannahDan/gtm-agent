@@ -8,7 +8,7 @@ from urllib.parse import urlparse
 
 from sqlmodel import Session, select
 
-from gtm_agent.models import Contact, EmailDraft, Institution, Role, Suppression, get_session
+from gtm_agent.models import Contact, EmailDraft, Institution, Role, Suppression, get_engine, get_session
 
 _ROLE_ORDER = {Role.program_director: 0, Role.coordinator: 1, Role.fellow: 2}
 
@@ -221,7 +221,7 @@ _PAGE = """<!DOCTYPE html>
         <tbody id="rows"></tbody>
       </table>
     </div>
-    <aside class="detail" id="detail" hidden>
+    <aside class="detail" id="detail" hidden tabindex="-1" aria-labelledby="d-name">
       <div class="detail-head">
         <h2 id="d-name"></h2>
         <button type="button" id="close">Close</button>
@@ -368,10 +368,12 @@ function renderTable() {
   for (const lead of visible) {
     const tr = document.createElement("tr");
     tr.tabIndex = 0;
+    tr.dataset.email = lead.email;
     if (lead.email === selectedEmail) tr.className = "selected";
     const open = () => openDetail(lead);
     tr.addEventListener("click", open);
     tr.addEventListener("keydown", (event) => {
+      if (event.target !== tr) return;
       if (event.key === "Enter" || event.key === " ") {
         event.preventDefault();
         open();
@@ -473,13 +475,30 @@ function openDetail(lead) {
     body.textContent = "No draft yet.";
   }
   renderTable();
+  detailEl.focus();
+}
+
+function focusLead(email) {
+  if (!email) return;
+  for (const row of rowsEl.querySelectorAll("tr")) {
+    if (row.dataset.email === email) {
+      row.focus();
+      return;
+    }
+  }
 }
 
 function closeDetail() {
+  const email = selectedEmail;
+  const active = document.activeElement;
+  const returnFocus = Boolean(email) && (
+    active === detailEl || detailEl.contains(active) || active === document.body
+  );
   selectedEmail = null;
   detailEl.hidden = true;
   layoutEl.classList.remove("open");
   renderTable();
+  if (returnFocus) focusLead(email);
 }
 
 function renderGaps() {
@@ -645,6 +664,7 @@ def make_server(host: str, port: int) -> ThreadingHTTPServer:
 
 
 def serve(host: str = "127.0.0.1", port: int = 8765, open_browser: bool = False) -> None:
+    get_engine()
     server = make_server(host, port)
     if open_browser:
         webbrowser.open(f"http://{host}:{port}/")
