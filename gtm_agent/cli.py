@@ -157,5 +157,22 @@ def export(output: Path = typer.Option(ROOT / "exports" / "contacts.csv", help="
     console.print(f"Wrote {len(rows)} row(s) to {output}")
 
 
+@app.command()
+def sheet(
+    port: int = typer.Option(8765, help="Port to bind on localhost"),
+    open_browser: bool = typer.Option(True, "--open/--no-open", help="Open a browser tab"),
+):
+    """Open the outreach lead sheet in a browser."""
+    from gtm_agent.sheet import serve
+
+    url = f"http://127.0.0.1:{port}"
+    console.print(f"Outreach lead sheet at {url}  (Ctrl-C to stop)")
+    try:
+        serve("127.0.0.1", port, open_browser=open_browser)
+    except OSError as exc:
+        console.print(f"Could not listen on {url}: {exc}")
+        raise typer.Exit(1) from exc
+
+
 if __name__ == "__main__":
     app()

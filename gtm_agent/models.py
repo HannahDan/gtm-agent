@@ -1,3 +1,4 @@
+import threading
 from datetime import datetime, timezone
 from enum import Enum
 from pathlib import Path
@@ -91,17 +92,23 @@ class Suppression(SQLModel, table=True):
 
 
 _engine = None
+_engine_lock = threading.Lock()
 
 
 def get_engine():
     global _engine
-    if _engine is None:
+    if _engine is not None:
+        return _engine
+    with _engine_lock:
+        if _engine is not None:
+            return _engine
         url = get_settings().database_url
         if url.startswith("sqlite:///"):
             Path(url.removeprefix("sqlite:///")).parent.mkdir(parents=True, exist_ok=True)
-        _engine = create_engine(url)
-        SQLModel.metadata.create_all(_engine)
-    return _engine
+        engine = create_engine(url)
+        SQLModel.metadata.create_all(engine)
+        _engine = engine
+        return _engine
 
 
 def get_session() -> Session:
